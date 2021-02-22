@@ -9,6 +9,22 @@ import 'package:test_belajar_bloc/utils/api-response.dart';
 enum StoriesType { topStories, newStories }
 
 class HackerNewsBloc {
+  static List<int> _newIds = [
+    25887373,
+    25916513,
+    25910400,
+    25888249,
+    25897736,
+  ];
+  static List<int> _topIds = [
+    25891464,
+    25906792,
+    25899286,
+    25903259,
+    25907356,
+    25904965,
+  ];
+
   static const _baseUrl = 'https://hacker-news.firebaseio.com/v0/';
   // hash map digunakan untuk menampilkan data lebih cepat => cara mencached data
   HashMap<int, Article> _cachedArticles;
@@ -21,8 +37,9 @@ class HackerNewsBloc {
 
   // untuk mendapatkan nilai yang masuk => sehingga tidak private
   Sink<StoriesType> get storiesType => _storiesTypeController.sink;
+
   // menyalurkan nilai keluar => sehingga tidak private
-  Stream<ApiResponse> get articles => _articlesSubject;
+  Stream<ApiResponse> get articles => _articlesSubject; //untuk process Loading
 
   HackerNewsBloc() {
     _cachedArticles = HashMap<int, Article>();
@@ -64,8 +81,11 @@ class HackerNewsBloc {
   _getArticleAndUpdate(List<int> ids) {
     // berarti untk provider memakai then,.. nantinya kalau pingin update ya ditaruh di then,.. seperti ini
     _articlesSubject.add(ApiResponse.loading('menunggu data masuk'));
+    // _articlesSubjectList.add(UnmodifiableListView(_articles));  //harusnya ini tidak karena nanti langsung diproses dibawah
     _updateArticles(ids).then((_) {
-      _articlesSubject.add(ApiResponse.completed(_articles));
+      // ** untuk yang loading
+      _articlesSubject.add(ApiResponse.completed(
+          _articles)); // ganti dengan data UnmodifiableListView(_articles) => tidak bisa dirubah oleh user
     }).catchError((e) {
       _articlesSubject.add(ApiResponse.error(e.toString()));
     });
@@ -80,20 +100,4 @@ class HackerNewsBloc {
   void close() {
     _storiesTypeController.close();
   }
-
-  static List<int> _newIds = [
-    25887373,
-    25916513,
-    25910400,
-    25888249,
-    25897736,
-  ];
-  static List<int> _topIds = [
-    25891464,
-    25906792,
-    25899286,
-    25903259,
-    25907356,
-    25904965,
-  ];
 }
